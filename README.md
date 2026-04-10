@@ -4,7 +4,7 @@
 
 This project aims to implement and analyze a Federated Learning (FL) system for image classification. The objective is to understand how multiple clients can collaboratively train a model without sharing their local data.
 
-The project focuses on both implementation and analysis, including the comparison between centralized and federated learning, as well as the impact of data distribution across clients.
+The project focuses on both implementation and experimental analysis, including the comparison between centralized and federated learning, as well as the impact of data distribution across clients.
 
 ---
 
@@ -22,40 +22,109 @@ The following components were developed:
 * A full Federated Learning loop over multiple rounds
 * Evaluation and comparison between centralized and federated performance
 
-Results show that the federated model converges over rounds and reaches performance close to the centralized model, with a small expected gap.
+Results showed that the federated model converges over rounds and reaches performance close to the centralized model, with a small expected gap.
+
+---
+
+## Sprint 2: Experimental Analysis
+
+The second sprint focuses on a deeper analysis of Federated Learning under more realistic conditions.
+
+### Data Distribution Analysis
+
+Several data distribution scenarios were implemented and compared:
+
+* IID distribution (baseline)
+* Non-IID distribution by classes (each client has different classes)
+* Non-IID imbalanced distribution (unequal data across clients)
+
+This allowed a detailed study of how data heterogeneity affects model performance.
+
+---
+
+### Experimental Studies
+
+Additional experiments were conducted to better understand FL dynamics:
+
+* Impact of the number of clients on convergence
+* Impact of the number of communication rounds
+* Visualization of accuracy evolution across rounds
+
+---
+
+### Model Evolution
+
+Three different models were implemented and compared:
+
+#### MLP (Sprint 1 baseline)
+* Simple architecture
+* Good baseline performance
+* Limited capacity for image data
+
+#### CNN V1
+* Introduced convolutional layers
+* Significant improvement over MLP
+* Good performance across all scenarios
+
+#### CNN V2 (BatchNorm + Dropout)
+* Added Batch Normalization and Dropout
+* Improved stability in IID settings
+* Failed in non-IID scenarios due to inconsistent BatchNorm statistics across clients
+
+#### CNN V3 (Final Model)
+* Removed BatchNorm
+* Kept Dropout for regularization
+* Restored strong performance in non-IID settings
+* Best trade-off between performance and robustness
+
+---
+
+### Key Findings
+
+* Federated Learning performs well under IID conditions
+* Non-IID data (especially class-based) significantly degrades performance
+* Model architecture alone cannot solve non-IID challenges
+* BatchNorm is not well-suited for Federated Learning with heterogeneous data
+* A simpler and well-adapted model (CNN V3) provides better robustness
 
 ---
 
 ## Current Results
 
-* Centralized model accuracy: 97.0%
-* Federated Learning (IID) accuracy after 3 rounds: 94.88%
+* Centralized model accuracy: ~97.0%
+* Federated Learning (IID, CNN): ~98.5%
+* Federated Learning (Non-IID classes): ~83–85%
+* Federated Learning (Non-IID imbalanced): ~98–99%
 
-The results are consistent with the expected behavior of Federated Learning.
+These results highlight both the effectiveness and limitations of Federated Learning.
 
 ---
 
 ## Future Work
 
-The next steps of the project aim to extend the current implementation and explore more realistic and advanced scenarios.
-
-### Analysis
-
-* Implement a non-IID data distribution across clients
-* Compare IID and non-IID performance
-* Study the impact of the number of clients on convergence
-* Add visualizations (accuracy vs rounds)
+The next steps aim to extend the project toward more advanced and realistic applications.
 
 ### Model Improvements
 
-* Introduce a Convolutional Neural Network (CNN) for better performance on image data
-* Explore autoencoders to learn latent representations and improve feature extraction
+* Explore autoencoders to learn better latent representations
+* Combine feature extraction with Federated Learning
 
-### Extensions
+### Federated Learning Extensions
 
-* Implement a simplified Federated Learning pipeline using Substra
-* Apply the approach to a subset of the MIMIC-IV dataset for a real-world healthcare use case
-* Develop a Streamlit interface to visualize training dynamics and experiment with parameters
+* Integrate Substra to simulate real-world FL pipelines
+* Experiment with more advanced aggregation strategies
+
+### Real-World Application
+
+* Apply the pipeline to a subset of the MIMIC-IV dataset
+* Explore privacy-preserving learning in healthcare
+
+### Visualization
+
+* Develop a Streamlit interface to:
+  * visualize training dynamics
+  * compare scenarios interactively
+  * experiment with parameters
 
 ---
 
@@ -70,4 +139,10 @@ The next steps of the project aim to extend the current implementation and explo
 
 ## Conclusion
 
-This project provides a complete implementation of Federated Learning and sets the foundation for further experimentation and real-world applications. It highlights the trade-off between performance and data privacy in distributed machine learning systems.
+This project provides a complete implementation and analysis of Federated Learning, from basic concepts to advanced challenges such as non-IID data.
+
+It highlights a key insight:
+
+> Performance in Federated Learning is not only determined by the model, but also by the distribution of data across clients.
+
+The project establishes a strong foundation for further research and real-world applications in distributed and privacy-preserving machine learning.
