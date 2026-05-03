@@ -1,148 +1,185 @@
-# Federated Learning Project
+# Federated Learning on MNIST
 
-## Project Description
+> From-scratch FedAvg in PyTorch · distributed Streamlit simulator · real Substra integration.
+> FedAvg implémenté de zéro · simulateur distribué Streamlit · intégration Substra.
 
-This project aims to implement and analyze a Federated Learning (FL) system for image classification. The objective is to understand how multiple clients can collaboratively train a model without sharing their local data.
+🇬🇧 [English](#english) · 🇫🇷 [Français](#français)
 
-The project focuses on both implementation and experimental analysis, including the comparison between centralized and federated learning, as well as the impact of data distribution across clients.
-
----
-
-## Sprint 1: Implementation
-
-During the first sprint, a complete Federated Learning pipeline was implemented from scratch using PyTorch.
-
-The following components were developed:
-
-* A baseline model (MLP) for image classification on MNIST
-* Centralized training to establish a performance reference
-* Simulation of multiple clients with IID data distribution
-* Local training on each client
-* Implementation of the Federated Averaging algorithm
-* A full Federated Learning loop over multiple rounds
-* Evaluation and comparison between centralized and federated performance
-
-Results showed that the federated model converges over rounds and reaches performance close to the centralized model, with a small expected gap.
+Built as a 3-sprint academic project (8INF887 — Apprentissage profond, UQAC).
 
 ---
 
-## Sprint 2: Experimental Analysis
+## English
 
-The second sprint focuses on a deeper analysis of Federated Learning under more realistic conditions.
+### Highlights
 
-### Data Distribution Analysis
+- **From-scratch FedAvg** in PyTorch — see `utils.py` (`federated_average`).
+- **Three architectures** — `MLP`, `CNN_V1`, `CNN_V3` (with the BatchNorm /
+  non-IID interaction analysed in Sprint 2).
+- **Three data distributions** — IID, non-IID by class, imbalanced.
+- **Streamlit distributed simulator** — multiple instances acting as Client / Server,
+  exchanging models via a shared `models/` directory.
+- **Substra integration** — real `substrafl` 1.0.0 pipeline (subprocess backend,
+  no Docker required) reusing the same model architectures.
 
-Several data distribution scenarios were implemented and compared:
+### Results (Sprint 2)
 
-* IID distribution (baseline)
-* Non-IID distribution by classes (each client has different classes)
-* Non-IID imbalanced distribution (unequal data across clients)
+| Model  | IID    | Non-IID classes | Non-IID imbalanced |
+|--------|--------|-----------------|--------------------|
+| MLP    | ~0.95  | 0.7328          | 0.9720             |
+| CNN_V1 | ~0.987 | ~0.85           | ~0.986             |
+| CNN_V2 | ~0.985 | **~0.11**       | ~0.988             |
+| CNN_V3 | ~0.985 | ~0.83           | ~0.989             |
 
-This allowed a detailed study of how data heterogeneity affects model performance.
+CNN_V2 collapses to chance on non-IID classes because BatchNorm running statistics
+are incompatible across heterogeneous clients — CNN_V3 (BN removed, dropout kept)
+restores robustness. Details in [`docs/sprint2_report.pdf`](docs/sprint2_report.pdf).
 
----
+### Quickstart
 
-### Experimental Studies
+```bash
+git clone <repo>
+cd FL
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+streamlit run app.py
+```
 
-Additional experiments were conducted to better understand FL dynamics:
+The Streamlit app has two tabs:
 
-* Impact of the number of clients on convergence
-* Impact of the number of communication rounds
-* Visualization of accuracy evolution across rounds
+- **🛰️ Distribué (Client / Server)** — pick a mode in the sidebar. To simulate
+  multiple machines, run several instances on different ports:
+  ```bash
+  streamlit run app.py --server.port 8501   # one tab as Server
+  streamlit run app.py --server.port 8502   # one tab as Client 1
+  streamlit run app.py --server.port 8503   # one tab as Client 2
+  ```
+  All instances share `models/`; clients write `client_*.pt`, the server aggregates
+  into `global.pt`. Includes a multi-round auto-runner with live convergence chart.
 
----
+- **🔬 Substra** — runs a real `substrafl` FedAvg compute plan locally (subprocess
+  backend, no Docker). MLP / 2 clients / 2 rounds takes ~20s.
 
-### Model Evolution
+Notebook walkthrough:
 
-Three different models were implemented and compared:
+```bash
+jupyter notebook notebooks/federated_mnist.ipynb
+```
 
-#### MLP (Sprint 1 baseline)
-* Simple architecture
-* Good baseline performance
-* Limited capacity for image data
+### Project layout
 
-#### CNN V1
-* Introduced convolutional layers
-* Significant improvement over MLP
-* Good performance across all scenarios
+```
+app.py               # Streamlit UI (Distribué + Substra tabs)
+fl_models.py         # PyTorch architectures (no I/O side effects)
+utils.py             # MNIST loading, splits, training helpers, FedAvg
+substra_runner.py    # substrafl pipeline (subprocess backend)
+notebooks/           # Jupyter walkthrough + earlier visual demo
+docs/                # Sprint reports, architecture diagram, figures
+```
 
-#### CNN V2 (BatchNorm + Dropout)
-* Added Batch Normalization and Dropout
-* Improved stability in IID settings
-* Failed in non-IID scenarios due to inconsistent BatchNorm statistics across clients
+### Reports
 
-#### CNN V3 (Final Model)
-* Removed BatchNorm
-* Kept Dropout for regularization
-* Restored strong performance in non-IID settings
-* Best trade-off between performance and robustness
+- [Sprint 1](docs/sprint1_report.pdf) — from-scratch FedAvg (94.88% federated vs
+  97.0% centralized, 3 rounds, IID, MLP).
+- [Sprint 2](docs/sprint2_report.pdf) — non-IID analysis, CNN architectures,
+  autoencoder experiment.
 
----
+(Reports written in French.)
 
-### Key Findings
+### Known caveats
 
-* Federated Learning performs well under IID conditions
-* Non-IID data (especially class-based) significantly degrades performance
-* Model architecture alone cannot solve non-IID challenges
-* BatchNorm is not well-suited for Federated Learning with heterogeneous data
-* A simpler and well-adapted model (CNN V3) provides better robustness
-
----
-
-## Current Results
-
-* Centralized model accuracy: ~97.0%
-* Federated Learning (IID, CNN): ~98.5%
-* Federated Learning (Non-IID classes): ~83–85%
-* Federated Learning (Non-IID imbalanced): ~98–99%
-
-These results highlight both the effectiveness and limitations of Federated Learning.
-
----
-
-## Future Work
-
-The next steps aim to extend the project toward more advanced and realistic applications.
-
-### Model Improvements
-
-* Explore autoencoders to learn better latent representations
-* Combine feature extraction with Federated Learning
-
-### Federated Learning Extensions
-
-* Integrate Substra to simulate real-world FL pipelines
-* Experiment with more advanced aggregation strategies
-
-### Real-World Application
-
-* Apply the pipeline to a subset of the MIMIC-IV dataset
-* Explore privacy-preserving learning in healthcare
-
-### Visualization
-
-* Develop a Streamlit interface to:
-  * visualize training dynamics
-  * compare scenarios interactively
-  * experiment with parameters
+- `substrafl` 1.0.0 + PyTorch ≥ 2.6 has a known bug at
+  `substrafl/algorithms/pytorch/torch_base_algo.py:249` (`torch.load(path)` needs
+  `weights_only=False`). Patch the file in your venv if you hit
+  `_pickle.UnpicklingError: Weights only load failed`.
+- `utils.py:split_noniid_imbalanced` uses a hardcoded 5-entry proportions list, so
+  it implicitly assumes `num_clients = 5` — keep that in mind in the sidebar.
 
 ---
 
-## Technologies
+## Français
 
-* Python
-* PyTorch
-* Substra (planned)
-* Streamlit (planned)
+### Aperçu
 
----
+- **FedAvg implémenté de zéro** en PyTorch — voir `utils.py` (`federated_average`).
+- **Trois architectures** — `MLP`, `CNN_V1`, `CNN_V3` (avec l'interaction
+  BatchNorm / non-IID analysée dans le Sprint 2).
+- **Trois distributions de données** — IID, non-IID par classes, déséquilibré.
+- **Simulateur distribué Streamlit** — plusieurs instances en mode Client / Server
+  qui échangent leurs modèles via le dossier partagé `models/`.
+- **Intégration Substra** — vrai pipeline `substrafl` 1.0.0 (backend subprocess,
+  sans Docker) qui réutilise les mêmes architectures.
 
-## Conclusion
+### Résultats (Sprint 2)
 
-This project provides a complete implementation and analysis of Federated Learning, from basic concepts to advanced challenges such as non-IID data.
+| Modèle | IID    | Non-IID classes | Non-IID déséquilibré |
+|--------|--------|-----------------|----------------------|
+| MLP    | ~0.95  | 0.7328          | 0.9720               |
+| CNN_V1 | ~0.987 | ~0.85           | ~0.986               |
+| CNN_V2 | ~0.985 | **~0.11**       | ~0.988               |
+| CNN_V3 | ~0.985 | ~0.83           | ~0.989               |
 
-It highlights a key insight:
+CNN_V2 chute au niveau du hasard en non-IID par classes : ses statistiques de
+BatchNorm sont incompatibles entre clients hétérogènes. CNN_V3 (BN retiré, Dropout
+conservé) restaure la robustesse. Détails dans
+[`docs/sprint2_report.pdf`](docs/sprint2_report.pdf).
 
-> Performance in Federated Learning is not only determined by the model, but also by the distribution of data across clients.
+### Démarrage rapide
 
-The project establishes a strong foundation for further research and real-world applications in distributed and privacy-preserving machine learning.
+```bash
+git clone <repo>
+cd FL
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+L'app Streamlit a deux onglets :
+
+- **🛰️ Distribué (Client / Server)** — choisis un mode dans la sidebar. Pour
+  simuler plusieurs machines, lance plusieurs instances sur des ports différents :
+  ```bash
+  streamlit run app.py --server.port 8501   # un onglet en Server
+  streamlit run app.py --server.port 8502   # un onglet en Client 1
+  streamlit run app.py --server.port 8503   # un onglet en Client 2
+  ```
+  Toutes les instances partagent `models/` ; les clients écrivent `client_*.pt`,
+  le serveur agrège dans `global.pt`. Inclut un auto-runner multi-rounds avec
+  courbe de convergence en direct.
+
+- **🔬 Substra** — lance un vrai compute plan `substrafl` FedAvg en local
+  (backend subprocess, sans Docker). MLP / 2 clients / 2 rounds prend ~20 s.
+
+Notebook pédagogique :
+
+```bash
+jupyter notebook notebooks/federated_mnist.ipynb
+```
+
+### Structure du projet
+
+```
+app.py               # UI Streamlit (onglets Distribué + Substra)
+fl_models.py         # Architectures PyTorch (sans side-effects à l'import)
+utils.py             # Chargement MNIST, splits, helpers d'entraînement, FedAvg
+substra_runner.py    # Pipeline substrafl (backend subprocess)
+notebooks/           # Notebook + démo visuelle Sprint 2
+docs/                # Rapports de sprint, diagramme d'archi, figures
+```
+
+### Rapports
+
+- [Sprint 1](docs/sprint1_report.pdf) — FedAvg from-scratch (94.88 % fédéré vs
+  97.0 % centralisé, 3 rounds, IID, MLP).
+- [Sprint 2](docs/sprint2_report.pdf) — analyse non-IID, architectures CNN,
+  expérimentation avec un autoencodeur.
+
+### Limitations connues
+
+- `substrafl` 1.0.0 + PyTorch ≥ 2.6 ont un bug à
+  `substrafl/algorithms/pytorch/torch_base_algo.py:249` (`torch.load(path)`
+  nécessite `weights_only=False`). À patcher dans le venv si tu rencontres
+  `_pickle.UnpicklingError: Weights only load failed`.
+- `utils.py:split_noniid_imbalanced` utilise une liste de proportions de 5
+  entrées en dur, donc suppose implicitement `num_clients = 5` — garde ça en
+  tête dans la sidebar.

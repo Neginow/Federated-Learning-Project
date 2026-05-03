@@ -1,5 +1,11 @@
 torch
 torchvision
-jupyter
-matplotlib
 numpy
+matplotlib
+streamlit
+jupyter
+
+# Substra integration (used by the Substra tab in app.py)
+substra==1.0.0
+substrafl==1.0.0
+substratools==1.0.0
