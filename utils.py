@@ -1,3 +1,7 @@
+"""Chargement MNIST, fonctions de split, helpers d'entraînement 
+et implémentation FedAvg (utilitaires)."""
+
+
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, random_split, Subset

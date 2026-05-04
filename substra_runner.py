@@ -1,3 +1,6 @@
+"""Runner Substra — prépare partitions, crée clients,
+ exécute un compute plan FedAvg via substrafl (backend subprocess)."""
+
 import shutil
 import tempfile
 from pathlib import Path
