@@ -173,13 +173,4 @@ docs/                # Rapports de sprint, diagramme d'archi, figures
   97.0 % centralisé, 3 rounds, IID, MLP).
 - [Sprint 2](docs/sprint2_report.pdf) — analyse non-IID, architectures CNN,
   expérimentation avec un autoencodeur.
-
-### Limitations connues
-
-- `substrafl` 1.0.0 + PyTorch ≥ 2.6 ont un bug à
-  `substrafl/algorithms/pytorch/torch_base_algo.py:249` (`torch.load(path)`
-  nécessite `weights_only=False`). À patcher dans le venv si tu rencontres
-  `_pickle.UnpicklingError: Weights only load failed`.
-- `utils.py:split_noniid_imbalanced` utilise une liste de proportions de 5
-  entrées en dur, donc suppose implicitement `num_clients = 5` — garde ça en
-  tête dans la sidebar.
+- [Rendu](docs/rapport_final.pdf) — Rapport Final.
