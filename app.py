@@ -90,11 +90,11 @@ def show_client_view(subset, split_type):
     classes_present = sorted({int(c) for c in labels})
 
     if split_type == "noniid_classes":
-        st.warning("⚠️ Ce client ne voit qu'un sous-ensemble des classes → scénario non-IID")
+        st.warning("Ce client ne voit qu'un sous-ensemble des classes → scénario non-IID")
     elif split_type == "imbalanced":
-        st.warning("⚠️ Distribution déséquilibrée des données")
+        st.warning("Distribution déséquilibrée des données")
     else:
-        st.success("✔️ Distribution homogène des données (IID)")
+        st.success("Distribution homogène des données (IID)")
 
     c1, c2 = st.columns(2)
     c1.metric("Échantillons locaux", int(len(labels)))
@@ -226,7 +226,7 @@ def run_auto_rounds(n_rounds, lr, model_name, split_type, num_clients):
         metric_slot.metric(f"Round {round_num}", f"{final_acc:.4f}")
 
     status.success(
-        f"✅ Terminé — {n_rounds} rounds, accuracy finale = {final_acc:.4f}"
+        f"Terminé — {n_rounds} rounds, accuracy finale = {final_acc:.4f}"
     )
     return acc_history
 
@@ -249,7 +249,7 @@ num_clients = st.sidebar.slider("Total clients", 2, 10, 5)
 # Top-level tabs
 # =========================
 
-tab_dist, tab_substra = st.tabs(["🛰️ Distribué (Client/Server)", "🔬 Substra"])
+tab_dist, tab_substra = st.tabs(["Distribué (Client/Server)", "Substra"])
 
 
 # =========================
@@ -258,7 +258,7 @@ tab_dist, tab_substra = st.tabs(["🛰️ Distribué (Client/Server)", "🔬 Sub
 
 with tab_dist:
     if mode == "Client":
-        st.title("🧑‍💻 Client")
+        st.title("Client")
 
         client_id = st.number_input(
             "Client ID", min_value=1, max_value=num_clients, value=1, step=1
@@ -267,9 +267,9 @@ with tab_dist:
 
         if os.path.exists(GLOBAL_PATH):
             gblob = torch.load(GLOBAL_PATH, map_location=device, weights_only=False)
-            st.info(f"📡 Round global actuel : **{int(gblob.get('round', 0))}**")
+            st.info(f"Round global actuel : **{int(gblob.get('round', 0))}**")
         else:
-            st.info("📡 Aucun modèle global encore — attends l'init du serveur.")
+            st.info("Aucun modèle global encore — attends l'init du serveur.")
 
         subsets = deterministic_subsets(split_type, num_clients)
         subset = subsets[int(client_id) - 1]
@@ -277,7 +277,7 @@ with tab_dist:
 
         st.divider()
 
-        if st.button("🚀 Train local model"):
+        if st.button("Train local model"):
             if not os.path.exists(GLOBAL_PATH):
                 st.error("`models/global.pt` introuvable — initialise-le côté serveur.")
                 st.stop()
@@ -320,19 +320,19 @@ with tab_dist:
             c2.metric("Test accuracy", f"{acc:.4f}")
 
     else:
-        st.title("🧠 Server")
+        st.title("Server")
 
         if os.path.exists(GLOBAL_PATH):
             _gb = torch.load(GLOBAL_PATH, map_location=device, weights_only=False)
             st.info(
-                f"📡 Round actuel : **{int(_gb.get('round', 0))}** "
+                f"Round actuel : **{int(_gb.get('round', 0))}** "
                 f"· {len(_gb.get('acc_history', []))} round(s) historisé(s)"
             )
 
         c1, c2 = st.columns(2)
 
         with c1:
-            if st.button("⚡ Initialize global model"):
+            if st.button("Initialize global model"):
                 torch.manual_seed(SEED)
                 model = get_model(model_name).to(device)
                 torch.save(
@@ -350,7 +350,7 @@ with tab_dist:
                 st.success(f"Initialisé `{GLOBAL_PATH}` (round=0, anciens clients supprimés).")
 
         with c2:
-            if st.button("🔗 Aggregate models"):
+            if st.button("Aggregate models"):
                 files = list_client_files()
                 if not files:
                     st.error("Aucun modèle client trouvé dans `models/`.")
@@ -398,7 +398,7 @@ with tab_dist:
                         st.metric("Global test accuracy", f"{acc:.4f}")
 
         st.divider()
-        st.markdown("### 🔁 Run FL for N rounds (auto)")
+        st.markdown("### Run FL for N rounds (auto)")
         st.caption(
             "Simule le cycle complet (clients → agrégation → re-broadcast) pendant N rounds. "
             "Les fichiers `client_*.pt` et `global.pt` sont mis à jour à chaque round."
@@ -411,7 +411,7 @@ with tab_dist:
         with rc3:
             st.write("")
             st.write("")
-            run_auto = st.button("▶️ Run FL for N rounds")
+            run_auto = st.button("Run FL for N rounds")
 
         if run_auto:
             run_auto_rounds(n_rounds, auto_lr, model_name, split_type, num_clients)
@@ -461,7 +461,7 @@ with tab_dist:
                 f"**Dernière mise à jour :** "
                 f"{fmt_time(blob.get('timestamp', os.path.getmtime(GLOBAL_PATH)))}"
             )
-            if st.button("📊 Evaluate global model"):
+            if st.button("Evaluate global model"):
                 model = get_model(blob["model_name"]).to(device)
                 model.load_state_dict(blob["state_dict"])
                 with st.spinner("Évaluation…"):
@@ -476,7 +476,7 @@ with tab_dist:
 # =========================
 
 with tab_substra:
-    st.title("🔬 Substra — Real FedAvg")
+    st.title("Substra — Real FedAvg")
     st.caption(
         "Pipeline substrafl 1.0.0, backend subprocess (sans Docker). "
         "Réutilise les architectures depuis `fl_models.py`. "
@@ -489,6 +489,7 @@ with tab_substra:
         sub_model = st.selectbox(
             "Model", ["MLP", "CNN_V1", "CNN_V3"], key="sub_model"
         )
+        sub_split = st.selectbox("Data split", ["iid", "noniid_classes", "imbalanced"], key="sub_split")
         sub_clients = st.slider("Nombre de clients", 2, 5, 3, key="sub_clients")
         sub_rounds = st.slider("Nombre de rounds", 1, 5, 2, key="sub_rounds")
     with sc2:
@@ -500,7 +501,7 @@ with tab_substra:
             "Batch size", options=[16, 32, 64, 128], value=64, key="sub_batch"
         )
 
-    if st.button("▶️ Run Substra experiment"):
+    if st.button("Run Substra experiment"):
         try:
             from substra_runner import run_substra_experiment
         except ImportError as e:
@@ -539,17 +540,18 @@ with tab_substra:
                     num_updates=sub_updates,
                     batch_size=sub_batch,
                     progress_callback=cb,
+                    split_type=sub_split,
                 )
         except Exception as e:
             status_slot.error(f"Échec : {type(e).__name__}: {e}")
             st.stop()
 
         status_slot.success(
-            f"✅ Done — final accuracy = {result['final_acc']:.4f}"
+            f"Done — final accuracy = {result['final_acc']:.4f}"
         )
         st.metric("Accuracy finale", f"{result['final_acc']:.4f}")
 
-        st.markdown("### 📈 Convergence (Substra)")
+        st.markdown("### Convergence (Substra)")
         fig = plot_acc_history(
             result["acc_history"], title="Convergence Substra (FedAvg)"
         )
